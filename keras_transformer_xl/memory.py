@@ -56,7 +56,10 @@ class Memory(keras.layers.Layer):
 
     def call(self, inputs, **kwargs):
         inputs, memory_length = inputs
-        memory_length = K.cast(memory_length[0][0], 'int32')
+        #memory_length = K.cast(memory_length[0][0], 'int32')
+        #self.memory_len=0
+        memory_length=0
+        self_memory_len=0
         batch_size = K.cast(K.shape(inputs)[0], 'int32')
         seq_len = K.cast(K.shape(inputs)[1], 'int32')
 
@@ -67,15 +70,15 @@ class Memory(keras.layers.Layer):
         new_memory = tf.slice(                                     # (self.batch_size, self.memory_len, output_dim)
             new_memory,
             (0, seq_len, 0),
-            (self.batch_size, self.memory_len + self.target_len, self.output_dim),
+            (self.batch_size, self_memory_len + self.target_len, self.output_dim),
         )
         self.add_update(K.update(self.memory, new_memory), inputs)
 
         # Build output
         old_memory = tf.slice(                                     # (batch_size, memory_length, output_dim)
             new_memory,
-            (0, K.maximum(0, self.memory_len + self.target_len - seq_len - memory_length), 0),
-            (batch_size, K.minimum(self.memory_len, memory_length), self.output_dim),
+            (0, K.maximum(0, self_memory_len + self.target_len - seq_len - memory_length), 0),
+            (batch_size, K.minimum(self_memory_len, memory_length), self.output_dim),
         )
 
         return old_memory
